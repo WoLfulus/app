@@ -404,7 +404,7 @@ export default {
 
         params.fields = params.fields.join(",");
       } else {
-        params.fields = "*.*";
+        params.fields = "*.*.*";
       }
 
       if (this.searchQuery) {
