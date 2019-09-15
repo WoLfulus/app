@@ -17,14 +17,6 @@
         >
           <v-icon :name="currentBookmark ? 'bookmark' : 'bookmark_border'" />
         </button>
-
-        <button
-          v-if="this.$store.state.currentUser.admin"
-          class="settings"
-          @click="editCollection()"
-        >
-          <v-icon :name="'settings_application'" />
-        </button>
       </template>
       <v-search-filter
         v-show="selection && selection.length === 0 && !emptyCollection"
@@ -37,6 +29,14 @@
         @clear-filters="clearFilters"
       />
       <template slot="buttons">
+        <v-header-button
+          v-if="this.$store.state.currentUser.admin"
+          :label="$t('settings')"
+          icon="settings"
+          icon-color="lighter_gray"
+          no-background
+          @click="editCollection()"
+        />
         <v-header-button
           v-if="editButton && !activity"
           key="edit"
