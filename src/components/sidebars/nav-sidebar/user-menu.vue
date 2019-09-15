@@ -1,9 +1,11 @@
 <template>
-  <div class="user-menu">
+  <div :class="menuClass">
     <header>
       <v-avatar :src="avatarURL" :alt="fullName" :indicator="true" class="avatar" />
       <span class="no-wrap">{{ fullName }}</span>
-      <v-icon name="expand_more" />
+      <button @mouseover="overLock = true" @mouseleave="overLock = false" @click="locked = !locked">
+        <v-icon :name="lockIcon" />
+      </button>
     </header>
     <div class="links">
       <nav-menu :links="userLinks" class="menu" />
@@ -36,16 +38,29 @@ export default {
   },
   data() {
     return {
+      locked: false,
+      overLock: false,
+      overMenu: false,
       confirmSignOut: false,
       confirmSignOutLoading: false
     };
   },
   computed: {
+    menuClass() {
+      const classes = ["user-menu"];
+      if (this.locked) {
+        classes.push("expanded");
+      }
+      return classes.join(" ");
+    },
+    lockIcon() {
+      const icons = [["lock_open", "lock_outline"], ["lock_outline", "lock_open"]];
+      return icons[+!this.overLock][+!this.locked];
+    },
     avatarURL() {
       if (this.$store.state.currentUser.avatar) {
         return this.$store.state.currentUser.avatar.data.full_url;
       }
-
       return null;
     },
     currentUserID() {
@@ -141,6 +156,7 @@ export default {
   background-color: var(--lightest-gray);
 
   &:hover,
+  &.expanded,
   .user-is-tabbing &:focus,
   .user-is-tabbing &:focus-within {
     transform: translateY(0);
@@ -166,7 +182,7 @@ export default {
       flex-shrink: 0;
     }
 
-    > i {
+    > button {
       position: absolute;
       right: 10px;
       color: var(--light-gray);
@@ -184,6 +200,10 @@ export default {
     i {
       color: var(--warning-dark);
     }
+  }
+
+  button.lock {
+    float: right;
   }
 
   .icon {
