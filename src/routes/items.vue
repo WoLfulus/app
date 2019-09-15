@@ -17,6 +17,14 @@
         >
           <v-icon :name="currentBookmark ? 'bookmark' : 'bookmark_border'" />
         </button>
+
+        <button
+          v-if="this.$store.state.currentUser.admin"
+          class="settings"
+          @click="editCollection()"
+        >
+          <v-icon :name="'settings_application'" />
+        </button>
       </template>
       <v-search-filter
         v-show="selection && selection.length === 0 && !emptyCollection"
@@ -494,6 +502,10 @@ export default {
   },
   methods: {
     keyBy: _.keyBy,
+    editCollection() {
+      if (!this.$store.state.currentUser.admin) return;
+      this.$router.push(`/settings/collections/${this.collection}`);
+    },
     closeBookmark() {
       this.bookmarkModal = false;
     },
@@ -694,7 +706,8 @@ label.style-4 {
   padding-bottom: 5px;
 }
 
-.bookmark {
+.bookmark,
+.settings {
   margin-left: 5px;
   position: relative;
 
