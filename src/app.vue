@@ -1,5 +1,5 @@
 <template>
-  <div v-if="hydratingError" class="error">
+  <div v-if="loaded && hydratingError" class="error">
     <v-error
       icon="warning"
       :title="$t('server_error')"
@@ -13,7 +13,7 @@
     </p>
   </div>
 
-  <div v-else-if="extensionError" class="error">
+  <div v-else-if="loaded && extensionError" class="error">
     <v-error
       icon="extension"
       :title="$t('extensions_missing')"
@@ -23,7 +23,7 @@
   </div>
 
   <div
-    v-else-if="!publicRoute"
+    v-else-if="loaded && !publicRoute"
     :style="{
       '--brand': `var(--${color})`
     }"
@@ -40,7 +40,7 @@
     <v-notification />
   </div>
 
-  <div v-else class="public">
+  <div v-else-if="loaded" class="public">
     <router-view />
     <v-notification />
   </div>
@@ -52,6 +52,7 @@ import VError from "./components/error.vue";
 import { TOGGLE_NAV } from "./store/mutation-types";
 import VNavSidebar from "./components/sidebars/nav-sidebar/nav-sidebar.vue";
 import VNotification from "./components/notifications/notifications.vue";
+import { loadLanguageAsync } from "./lang";
 
 export default {
   name: "Directus",
@@ -63,6 +64,9 @@ export default {
     VNavSidebar,
     VNotification
   },
+  data: () => ({
+    loaded: false
+  }),
   computed: {
     ...mapState({
       color: state =>
@@ -113,6 +117,19 @@ export default {
   },
   created() {
     this.bodyClass();
+    const shouldLoad =
+      window.__DirectusConfig__ &&
+      window.__DirectusConfig__.defaultLocale &&
+      window.__DirectusConfig__.defaultLocale !== "en-US";
+    if (shouldLoad) {
+      const { defaultLocale } = window.__DirectusConfig__;
+      // TODO: auto detect browser's language and load it accordingly if defaultLocale is "auto"
+      loadLanguageAsync(defaultLocale).then(() => {
+        this.loaded = true;
+      });
+    } else {
+      this.loaded = true;
+    }
   },
   methods: {
     bodyClass() {
