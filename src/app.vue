@@ -1,5 +1,5 @@
 <template>
-  <div v-if="loaded && hydratingError" class="error">
+  <div v-if="localeLoaded && hydratingError" class="error">
     <v-error
       icon="warning"
       :title="$t('server_error')"
@@ -13,7 +13,7 @@
     </p>
   </div>
 
-  <div v-else-if="loaded && extensionError" class="error">
+  <div v-else-if="localeLoaded && extensionError" class="error">
     <v-error
       icon="extension"
       :title="$t('extensions_missing')"
@@ -23,7 +23,7 @@
   </div>
 
   <div
-    v-else-if="loaded && !publicRoute"
+    v-else-if="localeLoaded && !publicRoute"
     :style="{
       '--brand': `var(--${color})`
     }"
@@ -40,7 +40,7 @@
     <v-notification />
   </div>
 
-  <div v-else-if="loaded" class="public">
+  <div v-else-if="localeLoaded" class="public">
     <router-view />
     <v-notification />
   </div>
@@ -52,7 +52,7 @@ import VError from "./components/error.vue";
 import { TOGGLE_NAV } from "./store/mutation-types";
 import VNavSidebar from "./components/sidebars/nav-sidebar/nav-sidebar.vue";
 import VNotification from "./components/notifications/notifications.vue";
-import { loadLanguageAsync } from "./lang";
+import { loadLanguageAsync, availableLanguages } from "./lang";
 
 export default {
   name: "Directus",
@@ -64,9 +64,11 @@ export default {
     VNavSidebar,
     VNotification
   },
-  data: () => ({
-    loaded: false
-  }),
+  data() {
+    return {
+      localeLoaded: false
+    };
+  },
   computed: {
     ...mapState({
       color: state =>
@@ -117,18 +119,38 @@ export default {
   },
   created() {
     this.bodyClass();
-    const shouldLoad =
+
+    const shouldLoadLocale =
       window.__DirectusConfig__ &&
       window.__DirectusConfig__.defaultLocale &&
       window.__DirectusConfig__.defaultLocale !== "en-US";
-    if (shouldLoad) {
-      const { defaultLocale } = window.__DirectusConfig__;
-      // TODO: auto detect browser's language and load it accordingly if defaultLocale is "auto"
+
+    if (shouldLoadLocale) {
+      let { defaultLocale } = window.__DirectusConfig__;
+
+      if (defaultLocale === "auto") {
+        let locale;
+
+        if (navigator.languages != undefined) {
+          locale = navigator.languages[0];
+        } else {
+          locale = navigator.language;
+        }
+
+        if (locale.length !== 5) {
+          // try finding a locale that fits the current language
+          const locales = Object.keys(availableLanguages);
+          locale = locales.find(l => l.startsWith(locale)) || "en-US";
+        }
+
+        defaultLocale = locale;
+      }
+
       loadLanguageAsync(defaultLocale).then(() => {
-        this.loaded = true;
+        this.localeLoaded = true;
       });
     } else {
-      this.loaded = true;
+      this.localeLoaded = true;
     }
   },
   methods: {
